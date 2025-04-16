@@ -290,12 +290,12 @@ def get_region_of_closest_word_in_line(view            : sublime.View,
                                            forward         : int,
                                            line            : int,
                                            col             : int
-                                           ) -> sublime.Region:
+                                           ) -> Union[None, sublime.Region]:
         flags = 0
         if not forward:
             flags = flags | sublime.REVERSE
 
-        regex = r"\b(\w)\b"
+        regex = r"\b(\w+)\b"
 
         if forward:
             line_region = sublime.Region(
@@ -305,44 +305,49 @@ def get_region_of_closest_word_in_line(view            : sublime.View,
             line_region = sublime.Region(
                 view.text_point(line, 0),
                 view.text_point(line, col))
+        logger.debug(f"Searching region {line_region} ('{view.substr(line_region)}').")
 
         return view.find_all(regex, flags, within = line_region)
 
-
-    # Use find-all through this helper functions to find to/from this point of the line only
+    # Use find-all through this helper function to find to/from this point of the line only
     rowcol = view.rowcol(point)
     line = rowcol[0]
     col = rowcol[1]
+    logger.debug(f"Finding closest word in line from {line + 1}:{col}.")
     regions = _get_region_of_closet_word_in_line(
         view, forward, line, col)
 
-    if len(regions) == 0:
+    if not regions:
+        logger.debug(f"No region found.")
         # Not found
         if not wrap:
             return None
 
         # Search again in the unsearched part of the line
         if forward:
-            col = 0
+            new_col = 0
         else:
             rowcol = view.rowcol(view.text_point(line + 1, 0) - 1)
             line = rowcol[0]
-            col = rowcol[1]
+            new_col = rowcol[1]
 
-        print(line)
-        print(col)
-        print(view.text_point(line + 1, 0))
-        regions = _get_region_of_closet_word_in_line(
-        view, forward, line, col)
-
-        if len(regions) == 1:
-            # Found the starting region only
+        if col == new_col:
+            # If we already searched the whole line there is no need to search again
             return None
+        else:
+            col = new_col
+
+        regions = _get_region_of_closet_word_in_line(
+            view, forward, line, col)
+
+    # Choose the first/last region
+    if not regions:
+        return None
 
     if forward:
         region = regions[0]
     else:
-        region = regions[-1]
+        region = selection.reverse_region(regions[-1])
 
     rowcol = view.rowcol(region.begin())
     line = rowcol[0] + 1

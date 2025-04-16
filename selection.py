@@ -90,3 +90,12 @@ def select_and_zoom_to_region(view   : sublime.View,
     sel.clear()
     sel.add(region)
     view.show_at_center(sel[0])
+
+def reverse_region(region : sublime.Region) -> sublime.Region:
+    """
+    Revert a region (moving the caret if it is a selection).
+
+    :param region: The region to revert
+    """
+
+    return sublime.Region(region.end(), region.begin())
