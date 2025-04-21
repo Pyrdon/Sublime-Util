@@ -16,18 +16,18 @@ import shlex
 import shutil
 from pathlib import Path
 
-def run_cmd(args : str, dry_run : bool = False, check : bool = True):
+def run_cmd(args : str, apply_change : bool = True, check : bool = True):
     """
     Runs a command
 
     :param args: The command as a string
-    :param dry_run: Whether to just log the execution and not perform it
+    :param apply_change: Whether to apply the command or just log the execution of it
     :param check: Whether to check for errors or not
     """
 
     shlex_args = shlex.split(args)
 
-    if dry_run:
+    if not apply_change:
         logger.debug(f"[dry-run] {' '.join(shlex_args)}")
         return
 
@@ -57,46 +57,43 @@ def get_submodules():
             submodules.append(module)
     return submodules
 
-def remove_submodule_link(path: str, dry_run: bool):
+def remove_submodule_link(path: str, apply_change: bool):
     """
     Removes a linked submodule and its git meta data, but keeps all other files
 
     :param path: Submodule path
-    :param dry_run: Whether to actually perform the removal or just perform a dry-run
+    :param apply_change: Whether to perform the removal or just log the execution of it
     """
 
     logger.info(f"Removing submodule '{path}'.")
-    run_cmd(f'git rm --cached {path}', dry_run)
-    run_cmd(f'git config --remove-section submodule.{path}', dry_run, check = False)
+    run_cmd(f'git rm --cached {path}', apply_change)
+    run_cmd(f'git config --remove-section submodule.{path}', apply_change, check = False)
 
     dot_git = Path(f"{path}/.git")
     if dot_git.exists():
         if dot_git.is_dir():
-            if dry_run:
-                logger.debug(f"[dry-run] Removing {dot_git} directory.")
-            else:
+            if apply_change:
                 shutil.rmtree(dot_git)
-        else:
-            if dry_run:
-                logger.debug(f"[dry-run] Removing {dot_git} file.")
             else:
+                logger.debug(f"[dry-run] Removing {dot_git} directory.")
+        else:
+            if apply_change:
                 dot_git.unlink()
+            else:
+                logger.debug(f"[dry-run] Removing {dot_git} file.")
 
     run_cmd(f'git add {path}')
 
-def cleanup_gitmodules(dry_run: bool):
+def cleanup_gitmodules(apply_change: bool):
     """
     Removing .gitmodules if exists
 
-    :param dry_run: Whether to actually perform the removal or just perform a dry-run
+    :param apply_change: Whether to perform the removal or just log the execution of it
     """
 
     gitmodules = Path('.gitmodules')
     if gitmodules.exists():
-        if dry_run:
-            logger.debug(f"[dry-run] Removing {gitmodules}.")
-        else:
-            run_cmd(f'git rm {gitmodules}')
+        run_cmd(f'git rm {gitmodules}', apply_change)
 
 def ensure_repo_root():
     """
@@ -112,9 +109,10 @@ def ensure_repo_root():
 
 def main():
     parser = argparse.ArgumentParser(
-        description = "Extract Git submodules by removing links and keeping contents.")
-    parser.add_argument('--dry-run', action = 'store_true', help = 'Preview actions without making changes')
-    parser.add_argument('--verbose', '-v', action = 'store_true', help = 'Enable debug logging')
+        description = "Extract Git submodules by removing links and keeping contents. Does not "
+        "perform any changes unless called with --apply.")
+    parser.add_argument('--apply', action = 'store_true', help = 'Apply actions.')
+    parser.add_argument('--verbose', '-v', action = 'store_true', help = 'Enable debug logging.')
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -125,7 +123,7 @@ def main():
     ensure_repo_root()
 
     logger.info("Initializing submodules.")
-    run_cmd('git submodule update --init --recursive', args.dry_run)
+    run_cmd('git submodule update --init --recursive', args.apply)
 
     submodules = get_submodules()
     if not submodules:
@@ -133,9 +131,9 @@ def main():
         return
 
     for submodule in submodules:
-        remove_submodule_link(submodule, args.dry_run)
+        remove_submodule_link(submodule, args.apply)
 
-    cleanup_gitmodules(args.dry_run)
+    cleanup_gitmodules(args.apply)
 
     logger.info("Done.")
 
