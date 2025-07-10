@@ -7,72 +7,53 @@ DEFAULT_LOG_LEVEL = 'warning'
 # Log level for informing for logging changes
 EVENT_LEVEL = logging.INFO
 
-# Log formatter and handler
-formatter = logging.Formatter(fmt="[{name}] {levelname}: {message}", style='{')
-handler = logging.StreamHandler()
-handler.setFormatter(formatter)
+# Global package logger
 pkg_name = __name__.split('.')[0]
 package_logger = logging.getLogger(pkg_name)
 
-# Special handling for log level setting to set it as early as possible
-settings = sublime.load_settings(f"{pkg_name}.sublime-settings")
-log_level = settings.get('log_level', DEFAULT_LOG_LEVEL).upper()
-log_level = getattr(logging, log_level)
-package_logger.setLevel(log_level)
-
-# Prevent root logger from catching this
-package_logger.propagate = False
-
 # Local logger
 logger = logging.getLogger(__name__)
-initialized = False
 
-def init(settings) -> None:
+def init(local_settings_module) -> None:
     """
     Initializes logging
 
-    :param settings:    The settings module
+    :param local_settings_module:    The local plugin's settings module
     """
 
-    # Add handler here to not add additional ones when file is saved and reloaded
+    # Set log formatter and add handler
+    formatter = logging.Formatter(fmt="[{name}] {levelname}: {message}", style='{')
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
     package_logger.addHandler(handler)
+
+    # Special handling for log level setting to set it as early as possible
+    sublime_settings = sublime.load_settings(f"{pkg_name}.sublime-settings")
+    log_level_name = sublime_settings.get('log_level', DEFAULT_LOG_LEVEL).upper()
+    log_level = getattr(logging, log_level_name)
+    package_logger.setLevel(log_level)
+
+    # Prevent root logger from catching these logs
+    package_logger.propagate = False
 
     logger.debug("Initializing logging.")
 
-    s = settings.Settings(logging.getLevelName(log_level))
+    s = local_settings_module.Settings(log_level_name)
     s.log_level.add_on_change(__name__, _on_log_lvl_change)
-    settings.init(s)
+    local_settings_module.init(s)
 
-    global initialized
-    initialized = True
-
-def deinit(settings) -> None:
+def deinit(local_settings_module) -> None:
     """
     Deinitializes logging
 
-    :param settings:    The settings module
+    :param local_settings_module:    The local plugin's settings module
     """
 
-    logger.debug("Deinitializing logging.")
-
-    settings.settings.log_level.clear_on_change(__name__)
-    settings.deinit()
+    local_settings_module.settings.log_level.clear_on_change(__name__)
+    local_settings_module.deinit()
     for handler in package_logger.handlers:
         logger.debug(f"Removing log handler {handler}.")
         package_logger.removeHandler(handler)
-
-    initialized = False
-
-def reinit(settings) -> None:
-    """
-    Reinitializes logging
-
-    :param settings:    The settings module
-    """
-
-    if initialized:
-        deinit(settings)
-    init(settings)
 
 def _on_log_lvl_change(name : str, old_val : str, new_val : str) -> None:
     """
