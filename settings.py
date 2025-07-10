@@ -8,17 +8,19 @@ import sublime
 from .validators import *
 
 class Settings():
-    def __init__(self):
+    def __init__(self, default_log_level, log_level_callback):
         self._settings_file = sublime.load_settings(f"{__name__.split('.')[0]}.sublime-settings")
         self._settings_file.add_on_change(__package__, self._on_settings_change)
 
         self._settings = SettingsList()
 
+        self._settings.add(LogLevelSetting('log_level', default_log_level))
+        self.log_level.add_on_change(__package__, log_level_callback)
+
     def deinit(self):
         logger.debug("Deleting settings.")
         self._settings_file.clear_on_change(__package__)
-        # for name, setting in self._settings.items():
-        #     setting.clear_on_change()
+        self.log_level.clear_on_change(__package__)
 
     def __getattr__(self, name):
         if not name.startswith("_"):

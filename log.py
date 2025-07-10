@@ -1,9 +1,6 @@
 import logging
 import sublime
 
-# Default log level if not specified in settings
-DEFAULT_LOG_LEVEL = 'warning'
-
 # Log level for informing for logging changes
 EVENT_LEVEL = logging.INFO
 
@@ -14,11 +11,11 @@ package_logger = logging.getLogger(pkg_name)
 # Local logger
 logger = logging.getLogger(__name__)
 
-def init(local_settings_module) -> None:
+def init(default_log_level : str) -> None:
     """
     Initializes logging
 
-    :param local_settings_module:    The local plugin's settings module
+    :param default_log_level: The default log level if not provided in settings file
     """
 
     # Set log formatter and add handler
@@ -29,28 +26,26 @@ def init(local_settings_module) -> None:
 
     # Special handling for log level setting to set it as early as possible
     sublime_settings = sublime.load_settings(f"{pkg_name}.sublime-settings")
-    log_level_name = sublime_settings.get('log_level', DEFAULT_LOG_LEVEL).upper()
+    # If the log level setting exists when package is enabled, just use the default and ignore it
+    # It will be parsed again when saving the settings file and then this will issue an error
+    # message
+    try:
+        log_level_name = sublime_settings.get('log_level', default_log_level).upper()
+    except Exception as e:
+        log_level_name = default_log_level.upper()
     log_level = getattr(logging, log_level_name)
     package_logger.setLevel(log_level)
 
     # Prevent root logger from catching these logs
     package_logger.propagate = False
 
-    logger.debug("Initializing logging.")
+    logger.debug("Initialized logging.")
 
-    s = local_settings_module.Settings(log_level_name)
-    s.log_level.add_on_change(__name__, _on_log_lvl_change)
-    local_settings_module.init(s)
-
-def deinit(local_settings_module) -> None:
+def deinit() -> None:
     """
     Deinitializes logging
-
-    :param local_settings_module:    The local plugin's settings module
     """
 
-    local_settings_module.settings.log_level.clear_on_change(__name__)
-    local_settings_module.deinit()
     for handler in package_logger.handlers:
         logger.debug(f"Removing log handler {handler}.")
         package_logger.removeHandler(handler)

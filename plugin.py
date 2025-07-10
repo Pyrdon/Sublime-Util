@@ -3,17 +3,17 @@ logger = logging.getLogger(__name__)
 
 from . import log
 
-def init(local_settings_module):
+def init(local_settings_module, *, default_log_level = 'warning'):
     """
     Called whenever the plugin is loaded
 
     :param local_settings_module: The plugin's settings module
+    :param default_log_level: The default log level if not provided in settings file
     """
 
     logger.debug("Plugin loaded.")
-    # Settings are initialized in the log module to ensure that the settings object exists, but to also be
-    # able to log initialization
-    log.init(local_settings_module)
+    log.init(default_log_level)
+    local_settings_module.Settings(default_log_level, log._on_log_lvl_change)
 
 def deinit(local_settings_module):
     """
@@ -23,4 +23,5 @@ def deinit(local_settings_module):
     """
 
     logger.debug("Plugin unloaded.")
-    log.deinit(local_settings_module)
+    local_settings_module.settings.deinit()
+    log.deinit()
