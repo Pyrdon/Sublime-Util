@@ -25,7 +25,7 @@ class Settings():
             try:
                 return self._settings[name]
             except KeyError as e:
-                raise NameError(f"Nu such setting '{name}'.") from None
+                raise NameError(f"No such setting '{name}'.") from None
 
     def _on_settings_change(self):
         logger.debug("Reloading settings.")
