@@ -67,7 +67,7 @@ def _on_log_lvl_change(name : str, old_val : str, new_val : str) -> None:
     old_val_level = getattr(logging, old_val.upper())
     new_val_level = getattr(logging, new_val.upper())
 
-    _settings_change_dbg_lvl = logging.INFO
+    _settings_change_dbg_lvl = EVENT_LEVEL
 
     update_level = False
     if old_val_level > _settings_change_dbg_lvl:
