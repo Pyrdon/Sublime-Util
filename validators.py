@@ -18,15 +18,17 @@ class Validator():
     def allowed_values_as_string(self):
         raise NotImplementedError(f"{self.__class__} must implement self.allowed_values_as_string.")
 
-class ListValidator(Validator):
+class EnumValidator(Validator):
     """
-    Validates a value to be a list item
+    Validates a value to be one of a list of items (an enum)
     """
     def __init__(self, allowed_values):
         self._allowed_values = allowed_values
 
     def validate(self, value):
         for val in self._allowed_values:
+            if not isinstance(value, str):
+                raise ValueError(f"Value must be a string")
             if value.lower() == val:
                 return val
         return None

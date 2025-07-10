@@ -6,6 +6,7 @@ logger = logging.getLogger(__name__)
 import sublime
 
 from .validators import *
+from . import status
 
 class Settings():
     def __init__(self, default_log_level, log_level_callback):
@@ -89,7 +90,12 @@ class SingleSetting():
 
     def _update(self, value):
         if str(value).lower() != str(self._value).lower():
-            encoded_value = self.validate(value)
+            try:
+                encoded_value = self.validate(value)
+            except Exception as e:
+                status.error_message(f"Failed validating value {value} for setting '{self._name}':\n{e}")
+                return
+
             if encoded_value is not None:
                 logger.debug(f"Changed setting '{self._name}' from '{self._value}' to '{encoded_value}'.")
                 old_value = self._value
@@ -97,13 +103,13 @@ class SingleSetting():
                 for k, v in self._callbacks.items():
                     v(self._name, old_value, self._value)
             else:
-                raise ValueError(
+                status.error_message(
                     f"Value '{value}' for setting '{self._name}' not supported. "
                     f"Allowed values are {self._validator.allowed_values_as_string}.")
 
 class EnumSetting(SingleSetting):
     def __init__(self, name, allowed_values, value):
-        super().__init__(name, value, ListValidator(allowed_values))
+        super().__init__(name, value, EnumValidator(allowed_values))
 
 class LogLevelSetting(EnumSetting):
     def __init__(self, name, value):
