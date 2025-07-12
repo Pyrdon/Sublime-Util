@@ -65,7 +65,7 @@ class SingleSetting():
         self._default = value
         self._validator = validator
         self._callbacks = {}
-        self._update(str(value))
+        self._update(value)
 
     def __str__(self):
         return str(self.value)
