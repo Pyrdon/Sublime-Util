@@ -40,8 +40,7 @@ class Settings():
             try:
                 setting._update(self._settings_file[name])
             except KeyError as e:
-                # Just ignore all settings not in the settings file
-                pass
+                setting._set_default()
 
 class SettingsList(dict):
     # def __init__(self):
@@ -55,6 +54,7 @@ class SingleSetting():
     def __init__(self, name, value, validator):
         self._name = name
         self._value = None
+        self._default = value
         self._validator = validator
         self._callbacks = {}
         self._update(str(value))
@@ -111,6 +111,10 @@ class SingleSetting():
                 status.error_message(
                     f"Value '{value}' for setting '{self._name}' not supported. "
                     f"Allowed values are {self._validator.allowed_values_as_string}.")
+
+    def _set_default(self):
+        _logger.debug(f"Changing setting '{self._name}' to default value '{self._default}.")
+        self._update(self._default)
 
 class EnumSetting(SingleSetting):
     def __init__(self, name, allowed_values, value):
