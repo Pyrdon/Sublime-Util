@@ -53,6 +53,25 @@ class IntegerRangeValidator(Validator):
     def allowed_values_as_string(self):
         return f"{self._min} to {self._max}"
 
+
+class TypeValidator(Validator):
+    """
+    Validates a value to be of a specific type
+    """
+
+    def __init__(self, value):
+        self._type = value
+
+    def validate(self, value):
+        if type(value) == self._type:
+            return value
+        else:
+            return None
+
+    @property
+    def allowed_values_as_string(self):
+        return f"of type {self._type.__name__}"
+
 class BooleanValidator(Validator):
     """
     Validates a value to a boolean

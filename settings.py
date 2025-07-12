@@ -141,6 +141,10 @@ class IntegerRangeSetting(SingleSetting):
     def __init__(self, name, value, minimum, maximum):
         super().__init__(name, value, IntegerRangeValidator(minimum, maximum))
 
+class TypeSetting(SingleSetting):
+    def __init__(self, name, value):
+        super().__init__(name, value, TypeValidator(type(value)))
+
 class BooleanSetting(SingleSetting):
     def __init__(self, name, value):
         super().__init__(name, value, BooleanValidator())
