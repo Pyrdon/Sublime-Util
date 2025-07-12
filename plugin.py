@@ -13,7 +13,7 @@ def init(local_settings_module, *, default_log_level = 'warning'):
 
     _logger.debug("Plugin loaded.")
     log.init(default_log_level)
-    local_settings_module.Settings(default_log_level, log._on_log_lvl_change)
+    local_settings_module.settings.init(default_log_level, log._on_log_lvl_change)
 
 def deinit(local_settings_module):
     """

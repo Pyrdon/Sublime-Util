@@ -9,14 +9,18 @@ from .validators import *
 from . import status
 
 class Settings():
-    def __init__(self, default_log_level, log_level_callback):
+    def __init__(self):
+        self._settings = SettingsList()
+
+    def init(self, default_log_level, log_level_callback):
         self._settings_file = sublime.load_settings(f"{__name__.split('.')[0]}.sublime-settings")
         self._settings_file.add_on_change(__package__, self._on_settings_change)
 
-        self._settings = SettingsList()
-
         self._settings.add(LogLevelSetting('log_level', default_log_level))
         self.log_level.add_on_change(__package__, log_level_callback)
+
+        # Call this once on creation to set it up
+        self._on_settings_change()
 
     def deinit(self):
         _logger.debug("Deleting settings.")
