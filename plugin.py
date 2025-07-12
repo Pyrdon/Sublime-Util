@@ -1,5 +1,5 @@
 import logging
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 from . import log
 
@@ -11,7 +11,7 @@ def init(local_settings_module, *, default_log_level = 'warning'):
     :param default_log_level: The default log level if not provided in settings file
     """
 
-    logger.debug("Plugin loaded.")
+    _logger.debug("Plugin loaded.")
     log.init(default_log_level)
     local_settings_module.Settings(default_log_level, log._on_log_lvl_change)
 
@@ -22,6 +22,6 @@ def deinit(local_settings_module):
     :param local_settings_module: The plugin's settings module
     """
 
-    logger.debug("Plugin unloaded.")
+    _logger.debug("Plugin unloaded.")
     local_settings_module.settings.deinit()
     log.deinit()

@@ -1,7 +1,7 @@
 import logging
 
-# Local logger
-logger = logging.getLogger(__name__)
+# Local _logger
+_logger = logging.getLogger(__name__)
 
 import sublime
 
@@ -19,7 +19,7 @@ class Settings():
         self.log_level.add_on_change(__package__, log_level_callback)
 
     def deinit(self):
-        logger.debug("Deleting settings.")
+        _logger.debug("Deleting settings.")
         self._settings_file.clear_on_change(__package__)
         self.log_level.clear_on_change(__package__)
 
@@ -31,7 +31,7 @@ class Settings():
                 raise NameError(f"No such setting '{name}'.") from None
 
     def _on_settings_change(self):
-        logger.debug("Reloading settings.")
+        _logger.debug("Reloading settings.")
         for name, setting in self._settings.items():
             try:
                 setting._update(self._settings_file[name])
@@ -72,7 +72,7 @@ class SingleSetting():
         try:
             self._callbacks[tag]
         except KeyError as e:
-            logger.debug(f"Adding callback '{tag}' for setting '{self._name}'.")
+            _logger.debug(f"Adding callback '{tag}' for setting '{self._name}'.")
             self._callbacks[tag] = callback
         else:
             raise ValueError(
@@ -85,7 +85,7 @@ class SingleSetting():
             raise ValueError(
                 f"Tag '{tag}' not registered a callback for change of setting '{self._name}'.")
         else:
-            logger.debug(f"Removing callback '{tag}' for setting '{self._name}'.")
+            _logger.debug(f"Removing callback '{tag}' for setting '{self._name}'.")
             del self._callbacks[tag]
 
     def _update(self, value):
@@ -97,10 +97,11 @@ class SingleSetting():
                 return
 
             if encoded_value is not None:
-                logger.debug(f"Changed setting '{self._name}' from '{self._value}' to '{encoded_value}'.")
+                _logger.debug(f"Changed setting '{self._name}' from '{self._value}' to '{encoded_value}'.")
                 old_value = self._value
                 self._value = encoded_value
                 for k, v in self._callbacks.items():
+                    _logger.debug(f"Calling callback {v} for setting {self._name}")
                     v(self._name, old_value, self._value)
             else:
                 status.error_message(

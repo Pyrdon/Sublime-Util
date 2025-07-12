@@ -1,7 +1,7 @@
 import logging
 
 # Local logger
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 class Validator():
     """

@@ -5,7 +5,7 @@ Module handling stuff related to the current view
 import logging
 
 # Local logger
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 from . import selection
 import sublime
@@ -269,7 +269,7 @@ def get_region_of_closet_same_word(view            : sublime.View,
         txt = 'Next'
     else:
         txt = 'Previous'
-    logger.debug(f"{txt} word is '{adj_word}' ({line}, [{col_start}:{col_end}]).")
+    _logger.debug(f"{txt} word is '{adj_word}' ({line}, [{col_start}:{col_end}]).")
     return region
 
 def get_region_of_closest_word_in_line(view            : sublime.View,
@@ -305,7 +305,7 @@ def get_region_of_closest_word_in_line(view            : sublime.View,
             line_region = sublime.Region(
                 view.text_point(line, 0),
                 view.text_point(line, col))
-        logger.debug(f"Searching region {line_region} ('{view.substr(line_region)}').")
+        _logger.debug(f"Searching region {line_region} ('{view.substr(line_region)}').")
 
         return view.find_all(regex, flags, within = line_region)
 
@@ -313,12 +313,12 @@ def get_region_of_closest_word_in_line(view            : sublime.View,
     rowcol = view.rowcol(point)
     line = rowcol[0]
     col = rowcol[1]
-    logger.debug(f"Finding closest word in line from {line + 1}:{col}.")
+    _logger.debug(f"Finding closest word in line from {line + 1}:{col}.")
     regions = _get_region_of_closet_word_in_line(
         view, forward, line, col)
 
     if not regions:
-        logger.debug(f"No region found.")
+        _logger.debug(f"No region found.")
         # Not found
         if not wrap:
             return None
@@ -359,6 +359,6 @@ def get_region_of_closest_word_in_line(view            : sublime.View,
         txt = 'Next'
     else:
         txt = 'Previous'
-    logger.debug(f"{txt} word is '{adj_word}' ({line}, [{col_start}:{col_end}]).")
+    _logger.debug(f"{txt} word is '{adj_word}' ({line}, [{col_start}:{col_end}]).")
     return region
 

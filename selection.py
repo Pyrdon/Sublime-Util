@@ -5,7 +5,7 @@ Module handling stuff related to the current selection
 import logging
 
 # Local logger
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 import sublime
 
