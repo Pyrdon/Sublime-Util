@@ -82,5 +82,5 @@ class BooleanValidator(Validator):
 
     @property
     def allowed_values_as_string(self):
-        return "'true' or 'false'"
+        return "true or false"
 
