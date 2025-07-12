@@ -88,14 +88,14 @@ class SingleSetting():
             self._callbacks[tag] = callback
         else:
             raise ValueError(
-                f"Tag '{tag}' already registered a callback for change of setting '{self._name}'.")
+                f"Tag '{tag}' already registered a callback for change of setting '{self._name}'.") from None
 
     def clear_on_change(self, tag):
         try:
             self._callbacks[tag]
         except KeyError as e:
             raise ValueError(
-                f"Tag '{tag}' not registered a callback for change of setting '{self._name}'.")
+                f"Tag '{tag}' not registered a callback for change of setting '{self._name}'.") from None
         else:
             _logger.debug(f"Removing callback '{tag}' for setting '{self._name}'.")
             del self._callbacks[tag]
