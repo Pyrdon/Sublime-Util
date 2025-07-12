@@ -42,6 +42,14 @@ class Settings():
             except KeyError as e:
                 setting._set_default()
 
+        # Find all settings in settings file but not defined by the plugin
+        diff = list(set(self._settings_file.to_dict().keys()) - set(self._settings.keys()))
+        if diff:
+            if len(diff) == 1:
+                status.error_message(f"Unknown setting '{diff[0]}'.")
+            else:
+                status.error_message(f"Unknown settings {diff}.")
+
 class SettingsList(dict):
     # def __init__(self):
     #     self._settings = {}
