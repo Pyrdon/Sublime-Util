@@ -74,7 +74,7 @@ class TypeValidator(Validator):
 
 class BooleanValidator(Validator):
     """
-    Validates a value to a boolean
+    Validates a value to be a boolean
     """
     def validate(self, value):
         value = str(value).lower()
@@ -83,4 +83,18 @@ class BooleanValidator(Validator):
     @property
     def allowed_values_as_string(self):
         return "true or false"
+
+class ListOfStringsValidator(Validator):
+    """
+    Validates a value to be a list of strings
+    """
+    def validate(self, value):
+        for element in value:
+            if not isinstance(element, str):
+                return None
+        return value
+
+    @property
+    def allowed_values_as_string(self):
+        return "list of strings"
 

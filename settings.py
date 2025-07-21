@@ -148,3 +148,11 @@ class TypeSetting(SingleSetting):
 class BooleanSetting(SingleSetting):
     def __init__(self, name, value):
         super().__init__(name, value, BooleanValidator())
+
+class ListOfTypeSettings(SingleSetting):
+    def __iter__(self):
+        return iter(self.value)
+
+class ListOfStringsSetting(ListOfTypeSettings):
+    def __init__(self, name, value):
+        super().__init__(name, value, ListOfStringsValidator())
