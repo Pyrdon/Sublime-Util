@@ -113,8 +113,11 @@ class SingleSetting():
                 old_value = self._value
                 self._value = encoded_value
                 for k, v in self._callbacks.items():
-                    _logger.debug(f"Calling callback {v} for setting {self._name}")
-                    v(self._name, old_value, self._value)
+                    _logger.debug(f"Calling callback {v} for setting '{self._name}'")
+                    try:
+                        v(self._name, old_value, self._value)
+                    except Exception as e:
+                        status.error_message(f"Failed calling callback {v} for setting '{self._name}':\n{e}")
             else:
                 status.error_message(
                     f"Value '{value}' for setting '{self._name}' not supported. "
@@ -156,3 +159,11 @@ class ListOfTypeSettings(SingleSetting):
 class ListOfStringsSetting(ListOfTypeSettings):
     def __init__(self, name, value):
         super().__init__(name, value, ListOfStringsValidator())
+
+class ListOfStringsOrDictionaryOfListOfStringsSetting(ListOfTypeSettings):
+    def __init__(self, name, value):
+        super().__init__(name, value, ListOfStringsOrDictionaryOfListOfStringsValidator())
+
+class InfiniteDictionaryOfStringsSetting(ListOfTypeSettings):
+    def __init__(self, name, value):
+        super().__init__(name, value, InfiniteDictionaryOfStringsValidator())

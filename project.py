@@ -2,6 +2,7 @@ import sublime
 import sublime_plugin
 import subprocess
 import os
+import json
 
 import logging
 _logger = logging.getLogger(__name__)
@@ -66,7 +67,7 @@ def rename(name):
         new_ws_path, f"{current_name}.sublime-project", f"{name}.sublime-project")
 
     # Open new project
-    switch(new_prj_path)
+    open_project(new_prj_path)
 
 def switch(path):
     """
@@ -75,7 +76,31 @@ def switch(path):
     :param path: The project to switch to
     """
 
-    _logger.debug(f"Switch to project '{get_name(path)}' from path {path}.")
+    path = os.path.abspath(path)
+
+    _logger.debug(f"Switching to project '{get_name(path)}' of path {path}.")
+
+    project_path = sublime.active_window().project_file_name()
+    workspace_path = sublime.active_window().workspace_file_name()
+    _logger.debug(f"Current project path is {project_path}")
+
+    if path == project_path:
+        # A switch to the same project. Handle this explicitly because the project will be not
+        # be opened again and the closing of the window will close the project.
+        return
+
+    # if path == workspace_path:
+    #     # A switch to the same workspace. Handle this explicitly because the project will be not
+    #     # be opened again and the closing of the window will close the project.
+    #     return
+
+    # Close all windows belonging to the current project, if any
+    if project_path is not None:
+        for w in list(sublime.windows()):
+            if w.project_file_name() == project_path:
+                w.run_command("close_window")
+
+    # Open the new project
     sublime.active_window().run_command("open_project_or_workspace", {"file": path})
 
 def open_project(path):
@@ -86,4 +111,20 @@ def open_project(path):
     """
 
     _logger.debug(f"Opening project '{get_name(path)}' from path {path}.")
-    subprocess.Popen([sublime.executable_path(), path])
+    sublime.active_window().run_command("open_project_or_workspace", {"file": path})
+    # subprocess.Popen([sublime.executable_path(), path])
+
+def create(path):
+    data = {
+        "folders": [
+            {
+                "path": "."
+            }
+        ],
+        "settings": {
+        }
+    }
+
+    # Write the project file
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4)

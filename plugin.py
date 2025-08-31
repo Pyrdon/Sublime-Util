@@ -13,7 +13,7 @@ def init(local_settings_module, *, default_log_level = 'warning'):
 
     _logger.debug("Plugin loaded.")
     log.init(default_log_level)
-    local_settings_module.settings.init(default_log_level, log._on_log_lvl_change)
+    local_settings_module.settings.init(default_log_level, log.on_log_lvl_change)
 
 def deinit(local_settings_module):
     """
@@ -25,3 +25,8 @@ def deinit(local_settings_module):
     _logger.debug("Plugin unloaded.")
     local_settings_module.settings.deinit()
     log.deinit()
+    # Attempt to delete the logging.VERBOSE added by the logger. Otherwise reloading won't work
+    try:
+        delattr(logging, 'VERBOSE')
+    except AttributeError as e:
+        pass

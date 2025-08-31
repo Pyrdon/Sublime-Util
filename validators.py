@@ -89,6 +89,8 @@ class ListOfStringsValidator(Validator):
     Validates a value to be a list of strings
     """
     def validate(self, value):
+        if not isinstance(value, list):
+            return None
         for element in value:
             if not isinstance(element, str):
                 return None
@@ -97,4 +99,54 @@ class ListOfStringsValidator(Validator):
     @property
     def allowed_values_as_string(self):
         return "list of strings"
+
+class ListOfStringsOrDictionaryOfListOfStringsValidator(Validator):
+    """
+    Validates a value to be a list of strings, or a dictionary of list of strings
+    """
+
+    def validate(self, value):
+        if isinstance(value, list):
+            for element in value:
+                if not isinstance(element, str):
+                    return None
+        elif isinstance(value, dict):
+            for key in value:
+                dict_value = value[key]
+                if not isinstance(dict_value, list):
+                    return None
+                for dv in dict_value:
+                    if not isinstance(dv, str):
+                        return None
+        else:
+            return None
+
+        return value
+
+    @property
+    def allowed_values_as_string(self):
+        return "list of strings, or dictionary of list of strings"
+
+class InfiniteDictionaryOfStringsValidator(Validator):
+    """
+    Validates a value to be an infinite dictionary of strings
+    """
+
+    def validate(self, value):
+        if not isinstance(value, dict):
+            return None
+
+        for key in value:
+            dv = value[key]
+            if isinstance(dv, dict):
+                if self.validate(dv) is None:
+                    return None
+            elif not isinstance(dv, str):
+                return None
+
+        return value
+
+    @property
+    def allowed_values_as_string(self):
+        return "infinite dictionary of strings"
 

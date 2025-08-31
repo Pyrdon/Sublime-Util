@@ -17,18 +17,20 @@ class QuickMenu(menu.Menu):
     A class representing a menu of items (other menus or actions)
     """
 
-    def __init__(self, title = "Top level", description = None, annotation = ""):
+    def __init__(self, title = "Top level", description = "", annotation = "", *, cancel_callback = None):
         """
         Initializes the QuickMenu
 
         :param title: The title
         :param description: The description (shown below the title)
         :param annotation: The annotation (shown to the right)
+        :param cancel_callback: A callback run when the menu is cancelled without action
         """
 
-        super().__init__(_MenuContents(title, description, annotation))
+        super().__init__(_MenuContents(title, description, annotation),
+            cancel_callback = cancel_callback)
 
-    def add_menu(self, title, description = None, annotation = ""):
+    def add_menu(self, title, description = "", annotation = ""):
         """
         Adds a sub menu
 
@@ -69,14 +71,14 @@ class QuickMenu(menu.Menu):
                                given input.
         """
 
-        def _item_callback(item):
+        def _item_callback(item, event):
             def _on_cancel():
                 item.back()
 
             user_input.show_input(
                 caption = input_caption,
                 initial_text = input_initial_text,
-                on_done = input_callback,
+                on_done = lambda text : input_callback(text, event),
                 on_cancel = _on_cancel
             )
 
@@ -106,7 +108,7 @@ class QuickMenu(menu.Menu):
         super().add(contents)
         return contents
 
-    def execute(self):
+    def execute(self, *args, **kwargs):
         """
         Opens the QuickMenu
         """
@@ -126,18 +128,30 @@ class QuickMenu(menu.Menu):
             items = items,
             selected_index = self.selected_index,
             on_select = self._on_select,
-            on_highlight = self._on_highlight
+            on_highlight = self._on_highlight,
+            flags = sublime.QuickPanelFlags.WANT_EVENT
         )
 
-    def _on_select(self, index):
+    def cancel(self):
+        """
+        Closes the QuickMenu
+        """
+
+        _logger.debug(f"Closing QuickMenu {self}")
+
+        # Ensure that whatever Sublime is doing is finished and close the panel as soon as possible
+        sublime.set_timeout(lambda : sublime.active_window().run_command("hide_overlay"), 0)
+
+    def _on_select(self, index, event):
         """
         Run when user applies an item (presses Enter)
 
         :param index: The index selected (-1 if cancelling)
+        :param event: The event
         """
 
         if index != -1:
-            self.enter()
+            self.enter(event)
         else:
             self.back()
 
@@ -195,10 +209,10 @@ class _QuickItem(menu.MenuItem):
 
         return self.contents.annotation
 
-    def execute(self):
+    def execute(self, *args, **kwargs):
         """
         Applies the action of the selected item
         """
 
         _logger.debug(f"Executing QuickMenu item {self}.")
-        self.contents.callback(self)
+        self.contents.callback(self, *args, **kwargs)
